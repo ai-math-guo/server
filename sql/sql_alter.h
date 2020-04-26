@@ -20,6 +20,7 @@
 class Alter_drop;
 class Alter_column;
 class Alter_rename_key;
+class Alter_index_visibility;
 class Key;
 
 /**
@@ -92,6 +93,8 @@ public:
   List<Alter_rename_key>        alter_rename_key_list;
   // List of columns, used by both CREATE and ALTER TABLE.
   List<Create_field>            create_list;
+  // Indexes whose visibilities are to be changed.
+  List<Alter_index_visibility>  alter_index_visibility_list;
 
   enum flags_bits
   {
@@ -128,6 +131,7 @@ public:
     key_list.empty();
     alter_rename_key_list.empty();
     create_list.empty();
+    alter_index_visibility_list.empty();
     check_constraint_list.empty();
     flags= 0;
     partition_flags= 0;

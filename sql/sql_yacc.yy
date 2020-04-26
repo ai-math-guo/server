@@ -1383,6 +1383,7 @@ End SQL_MODE_ORACLE_SPECIFIC */
         case_stmt_body opt_bin_mod opt_for_system_time_clause
         opt_if_exists_table_element opt_if_not_exists_table_element
         opt_recursive opt_format_xid opt_for_portion_of_time_clause
+        visibility
 
 %type <object_ddl_options>
         create_or_replace
@@ -6998,7 +6999,7 @@ all_key_opt:
          }
         | COMMENT_SYM TEXT_STRING_sys
           { Lex->last_key->key_create_info.comment= $2; }
-        | VISIBLE_SYM
+        | visibility
           {
             /* This is mainly for MySQL 8.0 compatiblity */
           }
@@ -7056,6 +7057,11 @@ btree_or_rtree:
           BTREE_SYM { $$= HA_KEY_ALG_BTREE; }
         | RTREE_SYM { $$= HA_KEY_ALG_RTREE; }
         | HASH_SYM  { $$= HA_KEY_ALG_HASH; }
+        ;
+
+visibility:
+          VISIBLE_SYM { $$= true; }
+        | INVISIBLE_SYM { $$= false; }
         ;
 
 key_list:
@@ -7742,6 +7748,16 @@ alter_list_item:
           {
             if (unlikely(Lex->add_alter_list($4, $7, $3)))
               MYSQL_YYABORT;
+          }
+        | ALTER INDEX_SYM ident visibility
+          {
+            LEX *lex= Lex;
+            Alter_index_visibility *ac= new (thd->mem_root)
+                                        Alter_index_visibility($3.str, $4);
+            if (ac == NULL)
+              MYSQL_YYABORT;
+            lex->alter_info.alter_index_visibility_list.push_back(ac);
+            lex->alter_info.flags|= ALTER_INDEX_VISIBILITY;
           }
         | ALTER opt_column opt_if_exists_table_element field_ident DROP DEFAULT
           {

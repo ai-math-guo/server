@@ -2478,6 +2478,9 @@ static void store_key_options(THD *thd, String *packet, TABLE *table,
       append_unescaped(packet, key_info->comment.str, 
                        key_info->comment.length);
     }
+
+    if (!key_info->is_visible)
+      packet->append(STRING_WITH_LEN(" INVISIBLE "));
   }
 }
 
@@ -6661,6 +6664,12 @@ static int get_schema_stat_record(THD *thd, TABLE_LIST *tables,
         if (key_info->flags & HA_USES_COMMENT)
           table->field[15]->store(key_info->comment.str, 
                                   key_info->comment.length, cs);
+
+        // is_visible column
+        const char *is_visible= key_info->is_visible ? "YES" : "NO";
+        table->field[16]->store(is_visible, strlen(is_visible), cs);
+        table->field[16]->set_notnull();
+
         if (schema_table_store_record(thd, table))
           DBUG_RETURN(1);
       }
@@ -9027,6 +9036,7 @@ ST_FIELD_INFO stat_fields_info[]=
   Column("COMMENT",       Varchar(16), NULLABLE, "Comment",     OPEN_FRM_ONLY),
   Column("INDEX_COMMENT", Varchar(INDEX_COMMENT_MAXLEN),
                                        NOT_NULL, "Index_comment",OPEN_FRM_ONLY),
+  Column("VISIBLE",      Varchar(3),  NOT_NULL, "Visible",        OPEN_FRM_ONLY),
   CEnd()
 };
 

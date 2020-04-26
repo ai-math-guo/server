@@ -61,6 +61,7 @@ struct extra2_fields
   LEX_CUSTRING application_period;
   LEX_CUSTRING field_data_type_info;
   LEX_CUSTRING without_overlaps;
+  LEX_CUSTRING index_flags;
   void reset()
   { bzero((void*)this, sizeof(*this)); }
 };
@@ -1574,6 +1575,9 @@ bool read_extra2(const uchar *frm_image, size_t len, extra2_fields *fields)
         case EXTRA2_FIELD_DATA_TYPE_INFO:
           fail= read_extra2_section_once(extra2, length, &fields->field_data_type_info);
           break;
+        case EXTRA2_INDEX_FLAGS:
+          fail= read_extra2_section_once(extra2, length, &fields->index_flags);
+          break;
         default:
           /* abort frm parsing if it's an unknown but important extra2 value */
           if (type >= EXTRA2_ENGINE_IMPORTANT)
@@ -1883,8 +1887,12 @@ int TABLE_SHARE::init_from_binary_frm_image(THD *thd, bool write,
     share->key_parts= key_parts= disk_buff[1];
   }
   share->keys_for_keyread.init(0);
+  // TODO varun: need to remove this
   share->keys_in_use.init(keys);
   ext_key_parts= key_parts;
+
+  if (extra2.index_flags.str && extra2.index_flags.length != keys)
+    goto err;
 
   len= (uint) uint2korr(disk_buff+4);
 

@@ -108,7 +108,7 @@ static handlerton *installed_htons[128];
 #define BITMAP_STACKBUF_SIZE (128/8)
 
 KEY_CREATE_INFO default_key_create_info=
-{ HA_KEY_ALG_UNDEF, 0, 0, {NullS, 0}, {NullS, 0}, true };
+{ HA_KEY_ALG_UNDEF, 0, 0, {NullS, 0}, {NullS, 0}, true, true };
 
 /* number of entries in handlertons[] */
 ulong total_ha= 0;
@@ -4802,6 +4802,7 @@ Alter_inplace_info::Alter_inplace_info(HA_CREATE_INFO *create_info_arg,
     index_drop_buffer(nullptr),
     index_add_count(0),
     index_add_buffer(nullptr),
+    index_altered_visibility_count(0),
     rename_keys(current_thd->mem_root),
     handler_ctx(nullptr),
     group_commit_ctx(nullptr),
